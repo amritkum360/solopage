@@ -52,6 +52,8 @@ export default function WebsiteBuilder() {
   const [slugAvailable, setSlugAvailable] = useState(null);
   const [checkingSlug, setCheckingSlug] = useState(false);
   const [originalSlug, setOriginalSlug] = useState('');
+  const [customDomain, setCustomDomain] = useState('');
+  const [useCustomDomain, setUseCustomDomain] = useState(false);
 
   // Get current data based on selected template
   const getCurrentData = () => {
@@ -440,8 +442,32 @@ export default function WebsiteBuilder() {
 
             {/* Scrollable Form Content */}
             <div className="flex-1 overflow-y-auto p-6">
-              {/* Slug Input - Show for both new and existing websites */}
-              <div className="space-y-2">
+              {/* Website URL Configuration */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      checked={!useCustomDomain}
+                      onChange={() => setUseCustomDomain(false)}
+                      className="mr-2"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Subdomain</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      checked={useCustomDomain}
+                      onChange={() => setUseCustomDomain(true)}
+                      className="mr-2"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Custom Domain</span>
+                  </label>
+                </div>
+
+                {!useCustomDomain ? (
+                  /* Subdomain Input */
+                  <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
                       Website Subdomain
                     </label>
@@ -486,12 +512,43 @@ export default function WebsiteBuilder() {
                       <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                         <p className="text-sm text-blue-800 font-medium">Your website will be available at:</p>
                         <p className="text-lg font-mono text-blue-900">https://{slug}.jirocash.com</p>
+                        <p className="text-sm text-blue-700 mt-1">Alternative: https://jirocash.com/site/{slug}</p>
+                        <p className="text-xs text-gray-600 mt-2">
+                          💡 You can also use other domains: solopage.com, mywebsitebuilder.com
+                        </p>
                       </div>
                     )}
                     <p className="text-xs text-gray-500">
                       Enter a unique subdomain for your website (only lowercase letters, numbers, and hyphens allowed)
                     </p>
                   </div>
+                ) : (
+                  /* Custom Domain Input */
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Custom Domain
+                    </label>
+                    <input
+                      type="text"
+                      value={customDomain}
+                      onChange={(e) => setCustomDomain(e.target.value.toLowerCase())}
+                      placeholder="yourdomain.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {customDomain && (
+                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p className="text-sm text-yellow-800 font-medium">Custom Domain Setup Required:</p>
+                        <p className="text-sm text-yellow-700 mt-1">
+                          You'll need to configure DNS records to point {customDomain} to our servers.
+                        </p>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500">
+                      Enter your custom domain (e.g., yourdomain.com)
+                    </p>
+                  </div>
+                )}
+              </div>
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Edit Your Information</h2>
                 {getCurrentForm()}

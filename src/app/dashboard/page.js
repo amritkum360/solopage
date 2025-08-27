@@ -189,15 +189,25 @@ export default function DashboardPage() {
                   </p>
                   {website.isPublished && (
                     <div className="p-2 bg-green-50 border border-green-200 rounded">
-                      <p className="text-xs text-green-800 font-medium">Live URL:</p>
-                      <a 
-                        href={`https://${website.slug}.jirocash.com`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-green-700 hover:text-green-800 underline"
-                      >
-                        https://{website.slug}.jirocash.com
-                      </a>
+                      <p className="text-xs text-green-800 font-medium">Live URLs:</p>
+                      <div className="space-y-1">
+                        <a 
+                          href={`https://${website.slug}.jirocash.com`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-green-700 hover:text-green-800 underline block"
+                        >
+                          https://{website.slug}.jirocash.com
+                        </a>
+                        <a 
+                          href={`/site/${website.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-700 hover:text-blue-800 underline block"
+                        >
+                          /site/{website.slug} (Alternative)
+                        </a>
+                      </div>
                     </div>
                   )}
                   <p className="text-sm text-gray-600">
