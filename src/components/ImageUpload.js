@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Trash2, Image as ImageIcon } from 'lucide-react';
 import apiService from '@/services/api';
+import Image from 'next/image';
 
 export default function ImageUpload({ value, onChange, label = "Profile Image" }) {
   const [showModal, setShowModal] = useState(false);
@@ -97,7 +98,7 @@ export default function ImageUpload({ value, onChange, label = "Profile Image" }
         <div className="flex items-center space-x-3">
           {value ? (
             <div className="relative">
-              <img
+              <Image
                 src={getImageUrl(value)}
                 alt="Profile"
                 className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
@@ -153,7 +154,7 @@ export default function ImageUpload({ value, onChange, label = "Profile Image" }
                 
                 {selectedFile && (
                   <div className="flex items-center space-x-3">
-                    <img
+                    <Image
                       src={URL.createObjectURL(selectedFile)}
                       alt="Preview"
                       className="w-16 h-16 rounded object-cover"
@@ -197,7 +198,7 @@ export default function ImageUpload({ value, onChange, label = "Profile Image" }
                     console.log('Rendering image:', { filename: image.filename, url: image.url, fullUrl: imageUrl });
                     return (
                       <div key={image.filename} className="relative group">
-                        <img
+                        <Image
                           src={imageUrl}
                           alt="User uploaded"
                           className="w-full h-24 object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-blue-500"

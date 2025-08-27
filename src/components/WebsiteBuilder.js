@@ -513,9 +513,6 @@ export default function WebsiteBuilder() {
                         <p className="text-sm text-blue-800 font-medium">Your website will be available at:</p>
                         <p className="text-lg font-mono text-blue-900">https://{slug}.jirocash.com</p>
                         <p className="text-sm text-blue-700 mt-1">Alternative: https://jirocash.com/site/{slug}</p>
-                        <p className="text-xs text-gray-600 mt-2">
-                          💡 You can also use other domains: solopage.com, mywebsitebuilder.com
-                        </p>
                       </div>
                     )}
                     <p className="text-xs text-gray-500">
@@ -539,7 +536,8 @@ export default function WebsiteBuilder() {
                       <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                         <p className="text-sm text-yellow-800 font-medium">Custom Domain Setup Required:</p>
                         <p className="text-sm text-yellow-700 mt-1">
-                          You'll need to configure DNS records to point {customDomain} to our servers.
+
+                          You will need to configure DNS records to point {`${customDomain}`} to our servers.
                         </p>
                       </div>
                     )}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, Phone, MapPin, Instagram, Facebook, MessageCircle } from 'lucide-react';
+import Image from 'next/image';
 
 // Default data structure for Business template
 export const defaultPersonalData = {
@@ -156,7 +157,7 @@ export default function PersonalTemplate({ data }) {
             <div className="flex items-center space-x-2 md:space-x-4">
               <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
                 {data.profileImage ? (
-                  <img src={data.profileImage} alt={data.name} className="w-full h-full object-cover rounded-full" />
+                  <Image src={data.profileImage} alt={data.name} className="w-full h-full object-cover rounded-full" />
                 ) : (
                   <User className="h-8 w-8 text-white" />
                 )}
@@ -235,7 +236,7 @@ export default function PersonalTemplate({ data }) {
             {data.products.map((product) => (
               <div key={product.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-gray-100 w-full max-w-[320px]">
                 <div className="h-48 md:h-72 overflow-hidden flex justify-center bg-gray-50">
-                  <img 
+                  <Image 
                     src={product.image} 
                     alt={product.name}
                     className="w-full h-full object-contain p-4 hover:scale-105 transition-transform duration-500"

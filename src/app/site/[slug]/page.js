@@ -17,27 +17,35 @@ export default function SitePage() {
   const [siteData, setSiteData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [tenantInfo, setTenantInfo] = useState(null);
+  const [detectedSlug, setDetectedSlug] = useState('');
 
   useEffect(() => {
+    // Detect subdomain from hostname
+    const detectSubdomain = () => {
+      if (typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        const hostParts = host.split('.');
+        
+        // If we have more than 2 parts (e.g., sonu.jirocash.com), extract subdomain
+        if (hostParts.length > 2) {
+          const subdomain = hostParts[0];
+          console.log('🌐 Detected subdomain:', subdomain);
+          return subdomain;
+        }
+      }
+      return null;
+    };
+
+    const subdomain = detectSubdomain();
+    const finalSlug = subdomain || slug;
+    
+    console.log('🎯 Final slug to use:', finalSlug);
+    setDetectedSlug(finalSlug);
+
     const fetchWebsiteData = async () => {
       try {
-        console.log('Fetching website for slug:', slug);
-        
-        // Get tenant information from headers (if available)
-        const tenantDomain = document.querySelector('meta[name="x-tenant-domain"]')?.content;
-        const tenantName = document.querySelector('meta[name="x-tenant-name"]')?.content;
-        const tenantTheme = document.querySelector('meta[name="x-tenant-theme"]')?.content;
-        
-        if (tenantDomain) {
-          setTenantInfo({
-            domain: tenantDomain,
-            name: tenantName,
-            theme: tenantTheme
-          });
-        }
-        
-        const response = await apiService.getPublishedWebsite(slug);
+        console.log('Fetching website for slug:', finalSlug);
+        const response = await apiService.getPublishedWebsite(finalSlug);
         console.log('Website data received:', response);
         setSiteData(response.website);
       } catch (error) {
@@ -54,7 +62,7 @@ export default function SitePage() {
       }
     };
 
-    if (slug) {
+    if (finalSlug) {
       fetchWebsiteData();
     }
   }, [slug]);
@@ -83,7 +91,10 @@ export default function SitePage() {
               <strong>Debug Info:</strong>
             </p>
             <p className="text-xs text-gray-500 mb-1">
-              Slug: {slug}
+              URL Slug: {slug}
+            </p>
+            <p className="text-xs text-gray-500 mb-1">
+              Detected Slug: {detectedSlug}
             </p>
             <p className="text-xs text-gray-500 mb-1">
               URL: {typeof window !== 'undefined' ? window.location.href : 'Unknown'}
@@ -91,11 +102,6 @@ export default function SitePage() {
             <p className="text-xs text-gray-500">
               Host: {typeof window !== 'undefined' ? window.location.host : 'Unknown'}
             </p>
-            {tenantInfo && (
-              <p className="text-xs text-gray-500">
-                Tenant: {tenantInfo.name} ({tenantInfo.domain})
-              </p>
-            )}
           </div>
 
           {/* Alternative Access Methods */}
@@ -105,26 +111,17 @@ export default function SitePage() {
             </p>
             <div className="space-y-1">
               <a 
-                href={`/site/${slug}`}
+                href={`/site/${detectedSlug || slug}`}
                 className="block text-blue-600 hover:text-blue-700 text-sm"
               >
-                Direct link: /site/{slug}
+                Direct link: /site/{detectedSlug || slug}
               </a>
-              {tenantInfo ? (
-                <a 
-                  href={`https://${tenantInfo.domain}/site/${slug}`}
-                  className="block text-blue-600 hover:text-blue-700 text-sm"
-                >
-                  {tenantInfo.name}: {tenantInfo.domain}/site/{slug}
-                </a>
-              ) : (
-                <a 
-                  href={`https://jirocash.com/site/${slug}`}
-                  className="block text-blue-600 hover:text-blue-700 text-sm"
-                >
-                  Main domain: jirocash.com/site/{slug}
-                </a>
-              )}
+              <a 
+                href={`https://jirocash.com/site/${detectedSlug || slug}`}
+                className="block text-blue-600 hover:text-blue-700 text-sm"
+              >
+                Main domain: jirocash.com/site/{detectedSlug || slug}
+              </a>
             </div>
           </div>
 

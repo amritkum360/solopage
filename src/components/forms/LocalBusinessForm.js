@@ -2,6 +2,7 @@ import React from 'react';
 import { Disclosure } from '@headlessui/react';
 import { ChevronDownIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import ImageUpload from '@/components/ImageUpload';
+import Image from 'next/image';
 
 export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVisibility }) {
   // Ensure products array exists
@@ -243,7 +244,7 @@ export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVi
                   {data.heroBackgroundImage && (
                     <div className="mt-2 p-2 bg-gray-50 rounded-lg">
                       <p className="text-xs text-gray-600 mb-1">Background Preview:</p>
-                      <img 
+                      <Image
                         src={data.heroBackgroundImage} 
                         alt="Hero Background"
                         className="w-full h-20 object-cover rounded border"
