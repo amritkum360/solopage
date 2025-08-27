@@ -22,6 +22,15 @@ export default function HomePage() {
           // Skip if it's www or other reserved subdomains
           if (subdomain !== 'www' && subdomain !== 'api' && subdomain !== 'jirocash') {
             console.log('🌐 Subdomain detected, redirecting to:', `/site/${subdomain}`);
+            
+            // Clean up URL first
+            const currentPath = window.location.pathname;
+            if (currentPath.startsWith('/site/')) {
+              const newUrl = `https://${window.location.host}`;
+              window.history.replaceState({}, '', newUrl);
+              console.log('🧹 Cleaned up URL from:', currentPath, 'to:', newUrl);
+            }
+            
             router.push(`/site/${subdomain}`);
             return;
           }

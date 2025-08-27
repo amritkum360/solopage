@@ -27,17 +27,19 @@ export function middleware(req) {
     !host.includes("vercel.app") &&
     !host.includes("netlify.app")
   ) {
-    // Rewrite to the site route with the subdomain as slug
-    const newPathname = `/site/${subdomain}`;
-    url.pathname = newPathname;
-    
-    console.log('🔄 Rewriting URL:', {
-      from: req.nextUrl.pathname,
-      to: newPathname,
-      subdomain: subdomain
-    });
-    
-    return NextResponse.rewrite(url);
+    // Only rewrite if we're on the root path (/) or empty path
+    if (req.nextUrl.pathname === "/" || req.nextUrl.pathname === "") {
+      const newPathname = `/site/${subdomain}`;
+      url.pathname = newPathname;
+      
+      console.log('🔄 Rewriting URL:', {
+        from: req.nextUrl.pathname,
+        to: newPathname,
+        subdomain: subdomain
+      });
+      
+      return NextResponse.rewrite(url);
+    }
   }
 
   console.log('⏭️ No rewrite needed, continuing...');

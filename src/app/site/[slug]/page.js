@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
   PortfolioTemplate, 
@@ -13,6 +13,7 @@ import apiService from '@/services/api';
 
 export default function SitePage() {
   const params = useParams();
+  const router = useRouter();
   const { slug } = params;
   const [siteData, setSiteData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,6 +42,17 @@ export default function SitePage() {
     
     console.log('🎯 Final slug to use:', finalSlug);
     setDetectedSlug(finalSlug);
+
+    // If we're on a subdomain and the URL shows /site/, clean it up
+    if (subdomain && typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      if (currentPath.startsWith('/site/')) {
+        // Update URL without the /site/ part
+        const newUrl = `https://${window.location.host}`;
+        window.history.replaceState({}, '', newUrl);
+        console.log('🧹 Cleaned up URL from:', currentPath, 'to:', newUrl);
+      }
+    }
 
     const fetchWebsiteData = async () => {
       try {
