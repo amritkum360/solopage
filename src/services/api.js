@@ -303,6 +303,16 @@ class ApiService {
       throw error;
     }
   }
+
+  // Get website by slug
+  async getWebsiteBySlug(slug) {
+    try {
+      const response = await fetch(`${this.baseURL}/websites/slug/${slug}`);
+      return this.handleResponse(response);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new ApiService();

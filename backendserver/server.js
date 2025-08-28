@@ -885,6 +885,33 @@ app.get('/api/site-by-domain/:domain', async (req, res) => {
   }
 });
 
+// Get website by slug
+app.get('/api/websites/slug/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    
+    const website = await Website.findOne({
+      slug: slug,
+      isPublished: true
+    });
+
+    if (!website) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Website not found' 
+      });
+    }
+
+    res.json({ 
+      success: true,
+      website: website 
+    });
+  } catch (error) {
+    console.error('Get website by slug error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

@@ -22,14 +22,22 @@ export default function CustomDomainPage() {
         
         console.log('🌐 Fetching custom domain data for:', domain);
         
-        const data = await apiService.getWebsiteByCustomDomain(domain);
+        // First try to get site slug by domain
+        const siteResponse = await apiService.getSiteByDomain(domain);
+        console.log('🌐 Site response:', siteResponse);
         
-        console.log('🌐 Custom domain API response:', data);
-        
-        if (data.success && data.website) {
-          setSiteData(data.website);
+        if (siteResponse.success && siteResponse.siteSlug) {
+          // Now fetch the website data using the slug
+          const websiteResponse = await apiService.getWebsiteBySlug(siteResponse.siteSlug);
+          console.log('🌐 Website response:', websiteResponse);
+          
+          if (websiteResponse.success && websiteResponse.website) {
+            setSiteData(websiteResponse.website);
+          } else {
+            setError('Website not found for this domain');
+          }
         } else {
-          setError(data.message || 'Website not found for this domain');
+          setError('Domain not found in database');
         }
       } catch (err) {
         console.error('Custom domain fetch error:', err);
