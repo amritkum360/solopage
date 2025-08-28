@@ -103,17 +103,20 @@ export default function CustomDomainPage() {
 
   // Render the appropriate template based on siteData.template
   const renderTemplate = () => {
+    console.log('🎨 Rendering template:', siteData.template);
+    console.log('📊 Site data:', siteData);
+    
     switch (siteData.template) {
       case 'business':
-        return <BusinessTemplate data={siteData} />;
+        return <BusinessTemplate data={siteData.data || siteData} />;
       case 'personal':
-        return <PersonalTemplate data={siteData} />;
+        return <PersonalTemplate data={siteData.data || siteData} />;
       case 'portfolio':
-        return <PortfolioTemplate data={siteData} />;
+        return <PortfolioTemplate data={siteData.data || siteData} />;
       case 'local-business':
-        return <LocalBusinessTemplate data={siteData} />;
+        return <LocalBusinessTemplate data={siteData.data || siteData} />;
       default:
-        return <PersonalTemplate data={siteData} />;
+        return <PersonalTemplate data={siteData.data || siteData} />;
     }
   };
 
