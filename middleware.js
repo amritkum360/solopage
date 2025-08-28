@@ -48,7 +48,8 @@ export function middleware(req) {
     !host.includes("localhost") &&
     !host.includes("127.0.0.1") &&
     !host.includes("vercel.app") &&
-    !host.includes("netlify.app")
+    !host.includes("netlify.app") &&
+    !host.includes("vercel-dns.com")
   ) {
     // This might be a custom domain
     if (req.nextUrl.pathname === "/" || req.nextUrl.pathname === "") {

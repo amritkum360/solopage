@@ -101,6 +101,18 @@ export default function DashboardPage() {
       
       const result = await apiService.checkCustomDomainStatus(domain);
       
+      // Also check if domain is accessible
+      try {
+        const response = await fetch(`https://${domain}`, { 
+          method: 'HEAD',
+          mode: 'no-cors'
+        });
+        result.accessible = true;
+      } catch (accessError) {
+        result.accessible = false;
+        result.accessError = 'Domain not accessible';
+      }
+      
       setDomainStatuses(prev => ({
         ...prev,
         [websiteId]: result
@@ -114,6 +126,30 @@ export default function DashboardPage() {
           message: 'Failed to check domain status'
         }
       }));
+    } finally {
+      setCheckingDomains(prev => ({ ...prev, [websiteId]: false }));
+    }
+  };
+
+  // Add custom domain to Vercel automatically
+  const addCustomDomainToVercel = async (domain, websiteId) => {
+    try {
+      setCheckingDomains(prev => ({ ...prev, [websiteId]: true }));
+      
+      const result = await apiService.addCustomDomainToVercel(domain);
+      
+      // Update website status
+      setWebsites(websites.map(website => 
+        website._id === websiteId 
+          ? { ...website, domainStatus: 'pending' }
+          : website
+      ));
+      
+      alert('Domain added to Vercel successfully! Please wait 24-48 hours for activation.');
+      
+    } catch (error) {
+      console.error('Add domain to Vercel error:', error);
+      alert('Failed to add domain to Vercel: ' + error.message);
     } finally {
       setCheckingDomains(prev => ({ ...prev, [websiteId]: false }));
     }
@@ -324,6 +360,23 @@ export default function DashboardPage() {
                                   {ns}
                                 </p>
                               ))}
+                            </div>
+                          )}
+                          
+                          {/* Domain Accessibility Warning */}
+                          {domainStatuses[website._id].accessible === false && (
+                            <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                              <p className="text-xs text-yellow-800 font-medium">⚠️ Domain Not Accessible</p>
+                              <p className="text-xs text-yellow-700 mt-1">
+                                Domain is configured but not accessible. Click the button below to add it to Vercel automatically.
+                              </p>
+                              <button
+                                onClick={() => addCustomDomainToVercel(website.customDomain, website._id)}
+                                disabled={checkingDomains[website._id]}
+                                className="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50"
+                              >
+                                {checkingDomains[website._id] ? 'Adding...' : 'Add to Vercel Automatically'}
+                              </button>
                             </div>
                           )}
                         </div>

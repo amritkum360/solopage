@@ -76,6 +76,15 @@ const websiteSchema = new mongoose.Schema({
     lowercase: true,
     sparse: true // Allows multiple null values
   },
+  domainStatus: {
+    type: String,
+    enum: ['pending', 'valid', 'invalid', 'not_added'],
+    default: 'not_added'
+  },
+  vercelDomainId: {
+    type: String,
+    trim: true
+  },
   template: {
     type: String,
     required: true,
@@ -605,6 +614,135 @@ app.get('/api/custom-domain/:domain', async (req, res) => {
     res.json({ website });
   } catch (error) {
     console.error('Get custom domain website error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Add custom domain to Vercel automatically
+app.post('/api/add-custom-domain', authenticateToken, async (req, res) => {
+  try {
+    const { domain } = req.body;
+    
+    if (!domain) {
+      return res.status(400).json({ message: 'Domain is required' });
+    }
+
+    // Check if domain exists in our database
+    const website = await Website.findOne({ 
+      customDomain: domain,
+      userId: req.user.userId 
+    });
+    
+    if (!website) {
+      return res.status(404).json({ message: 'Domain not found in your websites' });
+    }
+
+    // Vercel API configuration
+    const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
+    const VERCEL_PROJECT_ID = process.env.VERCEL_PROJECT_ID;
+    const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID;
+
+    if (!VERCEL_TOKEN || !VERCEL_PROJECT_ID) {
+      return res.status(500).json({ 
+        message: 'Vercel configuration missing. Please contact administrator.' 
+      });
+    }
+
+    // Add domain to Vercel using API
+    const vercelResponse = await fetch(`https://api.vercel.com/v1/projects/${VERCEL_PROJECT_ID}/domains`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${VERCEL_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: domain,
+        ...(VERCEL_TEAM_ID && { teamId: VERCEL_TEAM_ID })
+      })
+    });
+
+    const vercelData = await vercelResponse.json();
+
+    if (!vercelResponse.ok) {
+      console.error('Vercel API error:', vercelData);
+      return res.status(400).json({ 
+        message: `Failed to add domain to Vercel: ${vercelData.error?.message || 'Unknown error'}` 
+      });
+    }
+
+    // Update website with domain status
+    website.domainStatus = 'pending';
+    website.vercelDomainId = vercelData.id;
+    await website.save();
+
+    res.json({
+      message: 'Domain added to Vercel successfully',
+      domain: domain,
+      status: 'pending',
+      vercelData: vercelData
+    });
+
+  } catch (error) {
+    console.error('Add custom domain error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Check custom domain status in Vercel
+app.get('/api/check-vercel-domain/:domain', authenticateToken, async (req, res) => {
+  try {
+    const { domain } = req.params;
+    
+    // Check if domain exists in our database
+    const website = await Website.findOne({ 
+      customDomain: domain,
+      userId: req.user.userId 
+    });
+    
+    if (!website) {
+      return res.status(404).json({ message: 'Domain not found' });
+    }
+
+    // Vercel API configuration
+    const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
+    const VERCEL_PROJECT_ID = process.env.VERCEL_PROJECT_ID;
+    const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID;
+
+    if (!VERCEL_TOKEN || !VERCEL_PROJECT_ID) {
+      return res.status(500).json({ 
+        message: 'Vercel configuration missing' 
+      });
+    }
+
+    // Check domain status in Vercel
+    const vercelResponse = await fetch(`https://api.vercel.com/v1/projects/${VERCEL_PROJECT_ID}/domains/${domain}`, {
+      headers: {
+        'Authorization': `Bearer ${VERCEL_TOKEN}`,
+        ...(VERCEL_TEAM_ID && { 'x-team-id': VERCEL_TEAM_ID })
+      }
+    });
+
+    if (!vercelResponse.ok) {
+      return res.json({
+        status: 'not_added',
+        message: 'Domain not added to Vercel yet'
+      });
+    }
+
+    const vercelData = await vercelResponse.json();
+
+    // Update website status
+    website.domainStatus = vercelData.verification?.state || 'pending';
+    await website.save();
+
+    res.json({
+      status: vercelData.verification?.state || 'pending',
+      message: vercelData.verification?.state === 'VALID' ? 'Domain is active' : 'Domain verification pending',
+      vercelData: vercelData
+    });
+
+  } catch (error) {
+    console.error('Check Vercel domain error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

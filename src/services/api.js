@@ -257,6 +257,32 @@ class ApiService {
       throw error;
     }
   }
+
+  // Add custom domain to Vercel
+  async addCustomDomainToVercel(domain) {
+    try {
+      const response = await fetch(`${this.baseURL}/add-custom-domain`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ domain })
+      });
+      return this.handleResponse(response);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Check Vercel domain status
+  async checkVercelDomainStatus(domain) {
+    try {
+      const response = await fetch(`${this.baseURL}/check-vercel-domain/${domain}`, {
+        headers: this.getAuthHeaders()
+      });
+      return this.handleResponse(response);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new ApiService();
