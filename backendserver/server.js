@@ -753,6 +753,28 @@ app.get('/api/check-vercel-domain/:domain', authenticateToken, async (req, res) 
   }
 });
 
+// Debug: Check all custom domains in database
+app.get('/api/debug/custom-domains', async (req, res) => {
+  try {
+    const websites = await Website.find({ customDomain: { $exists: true, $ne: null } });
+    
+    res.json({
+      success: true,
+      count: websites.length,
+      websites: websites.map(w => ({
+        id: w._id,
+        slug: w.slug,
+        customDomain: w.customDomain,
+        isPublished: w.isPublished,
+        template: w.template
+      }))
+    });
+  } catch (error) {
+    console.error('Debug custom domains error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // Image upload routes
 app.post('/api/upload-image', authenticateToken, upload.single('image'), async (req, res) => {
   try {

@@ -283,6 +283,16 @@ class ApiService {
       throw error;
     }
   }
+
+  // Debug: Check all custom domains
+  async debugCustomDomains() {
+    try {
+      const response = await fetch(`${this.baseURL}/debug/custom-domains`);
+      return this.handleResponse(response);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new ApiService();
