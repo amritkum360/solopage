@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export function middleware(req) {
+export async function middleware(req) {
   const url = req.nextUrl.clone();
   const host = req.headers.get("host") || "";
 
@@ -53,17 +53,33 @@ export function middleware(req) {
   ) {
     // This might be a custom domain
     if (req.nextUrl.pathname === "/" || req.nextUrl.pathname === "") {
-      // Route to custom domain handler
-      const newPathname = `/custom-domain/${host}`;
-      url.pathname = newPathname;
-      
-      console.log('🌐 Custom domain detected:', {
-        host: host,
-        from: req.nextUrl.pathname,
-        to: newPathname
-      });
-      
-      return NextResponse.rewrite(url);
+      try {
+        // Check database for custom domain mapping via API
+        const response = await fetch(`${req.nextUrl.origin}/api/site-by-domain/${host}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.success) {
+            // Rewrite to the correct site slug
+            const newPathname = `/site/${data.siteSlug}`;
+            url.pathname = newPathname;
+            
+            console.log('🌐 Custom domain mapping found:', {
+              host: host,
+              siteSlug: data.siteSlug,
+              from: req.nextUrl.pathname,
+              to: newPathname
+            });
+            
+            return NextResponse.rewrite(url);
+          }
+        } else {
+          console.log('🌐 Custom domain not found in database:', host);
+        }
+      } catch (error) {
+        console.error('Error checking custom domain:', error);
+      }
     }
   }
 

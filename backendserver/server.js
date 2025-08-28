@@ -857,6 +857,34 @@ app.delete('/api/user-images/:userId/:filename', authenticateToken, async (req, 
   }
 });
 
+// Get site slug by custom domain (for middleware)
+app.get('/api/site-by-domain/:domain', async (req, res) => {
+  try {
+    const { domain } = req.params;
+    
+    const website = await Website.findOne({
+      customDomain: domain,
+      isPublished: true
+    });
+
+    if (website) {
+      res.json({
+        success: true,
+        siteSlug: website.slug,
+        template: website.template
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: 'Site not found for this domain'
+      });
+    }
+  } catch (error) {
+    console.error('Get site by domain error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

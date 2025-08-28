@@ -293,6 +293,16 @@ class ApiService {
       throw error;
     }
   }
+
+  // Get site slug by custom domain
+  async getSiteByDomain(domain) {
+    try {
+      const response = await fetch(`${this.baseURL}/site-by-domain/${domain}`);
+      return this.handleResponse(response);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new ApiService();
