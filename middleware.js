@@ -42,6 +42,30 @@ export function middleware(req) {
     }
   }
 
+  // Check if it's a custom domain (not jirocash.com and not localhost)
+  if (
+    !host.includes("jirocash.com") &&
+    !host.includes("localhost") &&
+    !host.includes("127.0.0.1") &&
+    !host.includes("vercel.app") &&
+    !host.includes("netlify.app")
+  ) {
+    // This might be a custom domain
+    if (req.nextUrl.pathname === "/" || req.nextUrl.pathname === "") {
+      // Route to custom domain handler
+      const newPathname = `/custom-domain/${host}`;
+      url.pathname = newPathname;
+      
+      console.log('🌐 Custom domain detected:', {
+        host: host,
+        from: req.nextUrl.pathname,
+        to: newPathname
+      });
+      
+      return NextResponse.rewrite(url);
+    }
+  }
+
   console.log('⏭️ No rewrite needed, continuing...');
   return NextResponse.next();
 }

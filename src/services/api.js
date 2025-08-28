@@ -237,6 +237,26 @@ class ApiService {
     });
     return this.handleResponse(response);
   }
+
+  // Check custom domain status
+  async checkCustomDomainStatus(domain) {
+    try {
+      const response = await fetch(`${this.baseURL}/check-domain-status/${domain}`);
+      return this.handleResponse(response);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get website by custom domain
+  async getWebsiteByCustomDomain(domain) {
+    try {
+      const response = await fetch(`${this.baseURL}/custom-domain/${domain}`);
+      return this.handleResponse(response);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new ApiService();

@@ -205,17 +205,21 @@ export default function WebsiteBuilder() {
         title: currentData.name || currentData.title || `${selectedTemplate.charAt(0).toUpperCase() + selectedTemplate.slice(1)} Website`,
         template: selectedTemplate,
         data: currentData,
-        isPublished: true
+        isPublished: true,
+        slug: slug
       };
+
+      // Add custom domain if selected
+      if (useCustomDomain && customDomain) {
+        websiteData.customDomain = customDomain;
+      }
 
       let result;
       if (editId) {
-        // Update existing website with new slug
-        websiteData.slug = slug;
+        // Update existing website
         result = await apiService.updateWebsite(editId, websiteData);
       } else {
-        // Create new website with custom slug
-        websiteData.slug = slug;
+        // Create new website
         result = await apiService.createWebsite(websiteData);
       }
 
@@ -248,6 +252,8 @@ export default function WebsiteBuilder() {
             setSelectedTemplate(website.template);
             setSlug(website.slug || '');
             setOriginalSlug(website.slug || '');
+            setCustomDomain(website.customDomain || '');
+            setUseCustomDomain(!!website.customDomain);
             
             // Set the appropriate data based on template
             switch (website.template) {
@@ -539,6 +545,15 @@ export default function WebsiteBuilder() {
 
                           You will need to configure DNS records to point {`${customDomain}`} to our servers.
                         </p>
+                      </div>
+                    )}
+                    {customDomain && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-lg mt-2">
+                        <p className="text-sm text-red-800 font-medium">Add these nameservers in your domain provider:</p>
+                        <div className="mt-2 space-y-1">
+                          <p className="text-sm font-mono text-red-700">ns1.vercel-dns.com</p>
+                          <p className="text-sm font-mono text-red-700">ns2.vercel-dns.com</p>
+                        </div>
                       </div>
                     )}
                     <p className="text-xs text-gray-500">

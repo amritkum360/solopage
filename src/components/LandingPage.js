@@ -1,6 +1,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Globe, FileText, Users } from 'lucide-react';
+import Header from './Header';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function LandingPage() {
           </div>
         </div>
       </header> */}
-
+      <Header />
       {/* Hero Section */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-16">

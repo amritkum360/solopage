@@ -70,6 +70,12 @@ const websiteSchema = new mongoose.Schema({
     unique: true,
     trim: true
   },
+  customDomain: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    sparse: true // Allows multiple null values
+  },
   template: {
     type: String,
     required: true,
@@ -286,7 +292,7 @@ app.post('/api/websites', authenticateToken, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, slug, template, data } = req.body;
+    const { title, slug, template, data, customDomain } = req.body;
 
     // Check if slug already exists
     const existingWebsite = await Website.findOne({ slug });
@@ -294,10 +300,19 @@ app.post('/api/websites', authenticateToken, [
       return res.status(400).json({ message: 'Slug already exists' });
     }
 
+    // Check if custom domain already exists (if provided)
+    if (customDomain) {
+      const existingCustomDomain = await Website.findOne({ customDomain });
+      if (existingCustomDomain) {
+        return res.status(400).json({ message: 'Custom domain already exists' });
+      }
+    }
+
     const website = new Website({
       userId: req.user.userId,
       title,
       slug,
+      customDomain,
       template,
       data
     });
@@ -359,7 +374,23 @@ app.put('/api/websites/:id', authenticateToken, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, template, data, isPublished } = req.body;
+    const { title, template, data, isPublished, slug, customDomain } = req.body;
+
+    // Check if slug already exists (if being updated)
+    if (slug) {
+      const existingWebsite = await Website.findOne({ slug, _id: { $ne: req.params.id } });
+      if (existingWebsite) {
+        return res.status(400).json({ message: 'Slug already exists' });
+      }
+    }
+
+    // Check if custom domain already exists (if being updated)
+    if (customDomain) {
+      const existingCustomDomain = await Website.findOne({ customDomain, _id: { $ne: req.params.id } });
+      if (existingCustomDomain) {
+        return res.status(400).json({ message: 'Custom domain already exists' });
+      }
+    }
 
     // Build update object with only provided fields
     const updateData = { updatedAt: Date.now() };
@@ -367,6 +398,8 @@ app.put('/api/websites/:id', authenticateToken, [
     if (template !== undefined) updateData.template = template;
     if (data !== undefined) updateData.data = data;
     if (isPublished !== undefined) updateData.isPublished = isPublished;
+    if (slug !== undefined) updateData.slug = slug;
+    if (customDomain !== undefined) updateData.customDomain = customDomain;
 
     const website = await Website.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.userId },
@@ -466,6 +499,112 @@ app.get('/api/sites/:slug', async (req, res) => {
     res.json({ website });
   } catch (error) {
     console.error('Get published website error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Check custom domain status
+app.get('/api/check-domain-status/:domain', async (req, res) => {
+  try {
+    const { domain } = req.params;
+    
+    // Check if domain exists in our database
+    const website = await Website.findOne({ customDomain: domain });
+    
+    if (!website) {
+      return res.json({ 
+        status: 'not_found',
+        message: 'Domain not found in our system'
+      });
+    }
+
+    // Check if domain is published
+    if (!website.isPublished) {
+      return res.json({ 
+        status: 'not_published',
+        message: 'Website is not published'
+      });
+    }
+
+    // Perform real DNS nameserver check
+    try {
+      const dns = require('dns').promises;
+      
+      // Get nameservers for the domain
+      const nameservers = await dns.resolveNs(domain);
+      
+      // Check if Vercel nameservers are configured
+      const vercelNameservers = [
+        'ns1.vercel-dns.com',
+        'ns2.vercel-dns.com',
+        'ns3.vercel-dns.com',
+        'ns4.vercel-dns.com'
+      ];
+      
+      const hasVercelNameservers = nameservers.some(ns => 
+        vercelNameservers.some(vercelNs => 
+          ns.toLowerCase().includes(vercelNs.toLowerCase())
+        )
+      );
+      
+      if (hasVercelNameservers) {
+        return res.json({ 
+          status: 'configured',
+          message: 'Domain is properly configured with Vercel nameservers',
+          nameservers: nameservers,
+          website: {
+            slug: website.slug,
+            title: website.title
+          }
+        });
+      } else {
+        return res.json({ 
+          status: 'dns_not_configured',
+          message: 'Domain nameservers are not pointing to Vercel. Please add Vercel nameservers in your domain provider.',
+          currentNameservers: nameservers,
+          requiredNameservers: vercelNameservers,
+          website: {
+            slug: website.slug,
+            title: website.title
+          }
+        });
+      }
+      
+    } catch (dnsError) {
+      console.error('DNS check error:', dnsError);
+      return res.json({ 
+        status: 'dns_error',
+        message: 'Unable to check DNS configuration. Please ensure domain is properly configured.',
+        website: {
+          slug: website.slug,
+          title: website.title
+        }
+      });
+    }
+
+  } catch (error) {
+    console.error('Check domain status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get published website by custom domain
+app.get('/api/custom-domain/:domain', async (req, res) => {
+  try {
+    const { domain } = req.params;
+    
+    const website = await Website.findOne({
+      customDomain: domain,
+      isPublished: true
+    });
+
+    if (!website) {
+      return res.status(404).json({ message: 'Website not found' });
+    }
+
+    res.json({ website });
+  } catch (error) {
+    console.error('Get custom domain website error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

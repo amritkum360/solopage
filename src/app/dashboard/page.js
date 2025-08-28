@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit, Eye, Trash2 } from 'lucide-react';
+import { Plus, Edit, Eye, Trash2, RefreshCw } from 'lucide-react';
 import apiService from '@/services/api';
 import Header from '@/components/Header';
 
@@ -11,6 +11,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUser] = useState(null);
+  const [domainStatuses, setDomainStatuses] = useState({});
+  const [checkingDomains, setCheckingDomains] = useState({});
   const router = useRouter();
 
   useEffect(() => {
@@ -89,6 +91,51 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Publish toggle error:', error);
       alert('Failed to update website status');
+    }
+  };
+
+  // Check custom domain status
+  const checkCustomDomainStatus = async (domain, websiteId) => {
+    try {
+      setCheckingDomains(prev => ({ ...prev, [websiteId]: true }));
+      
+      const result = await apiService.checkCustomDomainStatus(domain);
+      
+      setDomainStatuses(prev => ({
+        ...prev,
+        [websiteId]: result
+      }));
+    } catch (error) {
+      console.error('Domain status check error:', error);
+      setDomainStatuses(prev => ({
+        ...prev,
+        [websiteId]: {
+          status: 'error',
+          message: 'Failed to check domain status'
+        }
+      }));
+    } finally {
+      setCheckingDomains(prev => ({ ...prev, [websiteId]: false }));
+    }
+  };
+
+  // Get status color and message
+  const getStatusInfo = (status) => {
+    switch (status) {
+      case 'configured':
+        return { color: 'green', message: 'Domain configured correctly' };
+      case 'not_found':
+        return { color: 'red', message: 'Domain not found in system' };
+      case 'not_published':
+        return { color: 'yellow', message: 'Website not published' };
+      case 'dns_not_configured':
+        return { color: 'red', message: 'DNS not configured properly' };
+      case 'dns_error':
+        return { color: 'orange', message: 'DNS check failed' };
+      case 'error':
+        return { color: 'red', message: 'Error checking domain' };
+      default:
+        return { color: 'gray', message: 'Unknown status' };
     }
   };
 
@@ -187,6 +234,120 @@ export default function DashboardPage() {
                   <p className="text-sm text-gray-600">
                     <strong>Subdomain:</strong> {website.slug}.jirocash.com
                   </p>
+                  {website.customDomain && (
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600">
+                        <strong>Custom Domain:</strong> {website.customDomain}
+                      </p>
+                      
+                      {/* Domain Status */}
+                      <div className="flex items-center space-x-2">
+                        {domainStatuses[website._id] ? (
+                          <div className={`px-2 py-1 text-xs rounded-full ${
+                            getStatusInfo(domainStatuses[website._id].status).color === 'green' 
+                              ? 'bg-green-100 text-green-800'
+                              : getStatusInfo(domainStatuses[website._id].status).color === 'red'
+                              ? 'bg-red-100 text-red-800'
+                              : getStatusInfo(domainStatuses[website._id].status).color === 'orange'
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                          {getStatusInfo(domainStatuses[website._id].status).message}
+                        </div>
+                        ) : (
+                          <div className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+                            Status not checked
+                          </div>
+                        )}
+                        
+                        <button
+                          onClick={() => checkCustomDomainStatus(website.customDomain, website._id)}
+                          disabled={checkingDomains[website._id]}
+                          className="p-1 hover:bg-gray-100 rounded transition-colors"
+                          title="Check domain status"
+                        >
+                          <RefreshCw 
+                            size={12} 
+                            className={`${checkingDomains[website._id] ? 'animate-spin' : ''}`}
+                          />
+                        </button>
+                      </div>
+                      
+                      {/* Invalid Configuration Warning */}
+                      {domainStatuses[website._id] && domainStatuses[website._id].status !== 'configured' && (
+                        <div className="p-2 bg-red-50 border border-red-200 rounded">
+                          <p className="text-xs text-red-800 font-medium">⚠️ Invalid Configuration</p>
+                          <p className="text-xs text-red-700 mt-1">
+                            {domainStatuses[website._id].message}
+                          </p>
+                          
+                          {/* Show current nameservers if available */}
+                          {domainStatuses[website._id].currentNameservers && (
+                            <div className="mt-2">
+                              <p className="text-xs text-red-800 font-medium">Current Nameservers:</p>
+                              {domainStatuses[website._id].currentNameservers.map((ns, index) => (
+                                <p key={index} className="text-xs text-red-700 font-mono">
+                                  {ns}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Show required nameservers */}
+                          {domainStatuses[website._id].requiredNameservers && (
+                            <div className="mt-2">
+                              <p className="text-xs text-red-800 font-medium">Required Nameservers:</p>
+                              {domainStatuses[website._id].requiredNameservers.map((ns, index) => (
+                                <p key={index} className="text-xs text-red-700 font-mono">
+                                  {ns}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Success Configuration Info */}
+                      {domainStatuses[website._id] && domainStatuses[website._id].status === 'configured' && (
+                        <div className="p-2 bg-green-50 border border-green-200 rounded">
+                          <p className="text-xs text-green-800 font-medium">✅ DNS Configured Correctly</p>
+                          <p className="text-xs text-green-700 mt-1">
+                            {domainStatuses[website._id].message}
+                          </p>
+                          
+                          {/* Show configured nameservers */}
+                          {domainStatuses[website._id].nameservers && (
+                            <div className="mt-2">
+                              <p className="text-xs text-green-800 font-medium">Configured Nameservers:</p>
+                              {domainStatuses[website._id].nameservers.map((ns, index) => (
+                                <p key={index} className="text-xs text-green-700 font-mono">
+                                  {ns}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {/* Domain Configuration Instructions */}
+                      {website.customDomain && (
+                        <div className="p-2 bg-blue-50 border border-blue-200 rounded mt-2">
+                          <p className="text-xs text-blue-800 font-medium">📋 Domain Configuration Instructions:</p>
+                          <div className="text-xs text-blue-700 mt-1 space-y-1">
+                            <p>1. Go to your domain provider (GoDaddy, Namecheap, etc.)</p>
+                            <p>2. Find DNS/Nameserver settings</p>
+                            <p>3. Replace current nameservers with:</p>
+                            <div className="bg-white p-1 rounded font-mono text-xs">
+                              ns1.vercel-dns.com<br/>
+                              ns2.vercel-dns.com<br/>
+                              ns3.vercel-dns.com<br/>
+                              ns4.vercel-dns.com
+                            </div>
+                            <p>4. Save changes and wait 24-48 hours for propagation</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {website.isPublished && (
                     <div className="p-2 bg-green-50 border border-green-200 rounded">
                       <p className="text-xs text-green-800 font-medium">Live URLs:</p>
@@ -199,6 +360,16 @@ export default function DashboardPage() {
                         >
                           https://{website.slug}.jirocash.com
                         </a>
+                        {website.customDomain && (
+                          <a 
+                            href={`https://${website.customDomain}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-purple-700 hover:text-purple-800 underline block"
+                          >
+                            https://{website.customDomain} (Custom)
+                          </a>
+                        )}
                         <a 
                           href={`/site/${website.slug}`}
                           target="_blank"
