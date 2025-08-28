@@ -24,10 +24,12 @@ export default function CustomDomainPage() {
         
         const data = await apiService.getWebsiteByCustomDomain(domain);
         
+        console.log('🌐 Custom domain API response:', data);
+        
         if (data.success && data.website) {
           setSiteData(data.website);
         } else {
-          setError('Website not found for this domain');
+          setError(data.message || 'Website not found for this domain');
         }
       } catch (err) {
         console.error('Custom domain fetch error:', err);

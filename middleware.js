@@ -53,8 +53,8 @@ export function middleware(req) {
   ) {
     // This might be a custom domain
     if (req.nextUrl.pathname === "/" || req.nextUrl.pathname === "") {
-      // Route to custom domain handler
-      const newPathname = `/custom-domain/${host}`;
+      // Route to custom domain handler (temporarily test page)
+      const newPathname = `/test-custom-domain`;
       url.pathname = newPathname;
       
       console.log('🌐 Custom domain detected:', {
