@@ -123,9 +123,9 @@ export default function CustomDomainPage() {
   return (
     <div>
       {/* Debug info - remove in production */}
-      <div className="fixed top-0 left-0 bg-black text-white p-2 text-xs z-50">
+      {/* <div className="fixed top-0 left-0 bg-black text-white p-2 text-xs z-50">
         Hostname: {typeof window !== 'undefined' ? window.location.hostname : 'Unknown'} | Template: {siteData.template}
-      </div>
+      </div> */}
       
       {renderTemplate()}
     </div>

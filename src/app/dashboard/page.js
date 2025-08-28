@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit, Eye, Trash2, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Eye, Trash2, RefreshCw, CheckCircle, AlertTriangle, Info } from 'lucide-react';
 import apiService from '@/services/api';
 import Header from '@/components/Header';
 
@@ -34,6 +34,21 @@ export default function DashboardPage() {
         // Get user's websites
         const websitesResponse = await apiService.getUserWebsites();
         setWebsites(websitesResponse.websites);
+        
+        // Set loading state for DNS checks
+        const websitesWithCustomDomains = websitesResponse.websites.filter(website => website.customDomain);
+        const initialCheckingState = {};
+        websitesWithCustomDomains.forEach(website => {
+          initialCheckingState[website._id] = true;
+        });
+        setCheckingDomains(initialCheckingState);
+        
+        // Check DNS status after dashboard loads
+        setTimeout(() => {
+          websitesWithCustomDomains.forEach(website => {
+            checkCustomDomainStatus(website.customDomain, website._id);
+          });
+        }, 1000);
       } catch (error) {
         console.error('Dashboard error:', error);
         if (error.message.includes('token') || error.message.includes('unauthorized')) {
@@ -81,6 +96,24 @@ export default function DashboardPage() {
 
   const handlePublishToggle = async (websiteId, currentStatus) => {
     try {
+      // If trying to publish, check for custom domain conflicts first
+      if (!currentStatus) {
+        const website = websites.find(w => w._id === websiteId);
+        if (website && website.customDomain) {
+          try {
+            const domainCheck = await apiService.checkCustomDomainUsage(website.customDomain, websiteId);
+            if (domainCheck.isUsed) {
+              alert(`Cannot publish: ${domainCheck.message}. Please unpublish the other website first or choose a different domain.`);
+              return;
+            }
+          } catch (domainError) {
+            console.error('Domain check error:', domainError);
+            alert('Failed to check custom domain availability. Please try again.');
+            return;
+          }
+        }
+      }
+
       const result = await apiService.toggleWebsitePublish(websiteId);
       
       setWebsites(websites.map(website => 
@@ -205,9 +238,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
@@ -247,193 +278,163 @@ export default function DashboardPage() {
             </div>
           ) : (
             websites.map((website) => (
-              <div key={website._id} className="bg-white rounded-lg shadow-sm border p-6">
-                <div className="flex justify-between items-start mb-4">
+              <div key={website._id} className="bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col min-h-[400px]">
+                <div className="flex justify-between items-start p-6 pb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">
                       {website.title}
                     </h3>
-                    <p className="text-sm text-gray-500 capitalize">
+                    <p className="text-sm text-gray-600 capitalize font-medium">
                       {website.template} template
                     </p>
                   </div>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
+                  <span className={`px-3 py-1 text-xs font-semibold rounded-full shadow-sm ${
                     website.isPublished 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-yellow-100 text-yellow-800'
+                      ? 'bg-green-100 text-green-800 border border-green-200' 
+                      : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
                   }`}>
                     {website.isPublished ? 'Published' : 'Draft'}
                   </span>
                 </div>
 
-                <div className="space-y-2 mb-4">
-                  <p className="text-sm text-gray-600">
-                    <strong>Subdomain:</strong> {website.slug}.jirocash.com
-                  </p>
-                  {website.customDomain && (
-                    <div className="space-y-2">
+                <div className="px-6 flex-1">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
                       <p className="text-sm text-gray-600">
-                        <strong>Custom Domain:</strong> {website.customDomain}
+                        <strong>Subdomain:</strong> <a 
+                            href={`https://${website.slug}.jirocash.com`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-green-700 hover:text-green-800 underline "
+                          >
+                            {website.slug}.jirocash.com
+                          </a>
                       </p>
-                      
-                      {/* Domain Status */}
-                      <div className="flex items-center space-x-2">
-                        {domainStatuses[website._id] ? (
-                          <div className={`px-2 py-1 text-xs rounded-full ${
-                            getStatusInfo(domainStatuses[website._id].status).color === 'green' 
-                              ? 'bg-green-100 text-green-800'
-                              : getStatusInfo(domainStatuses[website._id].status).color === 'red'
-                              ? 'bg-red-100 text-red-800'
-                              : getStatusInfo(domainStatuses[website._id].status).color === 'orange'
-                              ? 'bg-orange-100 text-orange-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                          {getStatusInfo(domainStatuses[website._id].status).message}
-                        </div>
-                        ) : (
-                          <div className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
-                            Status not checked
-                          </div>
-                        )}
-                        
-                        <button
-                          onClick={() => checkCustomDomainStatus(website.customDomain, website._id)}
-                          disabled={checkingDomains[website._id]}
-                          className="p-1 hover:bg-gray-100 rounded transition-colors"
-                          title="Check domain status"
-                        >
-                          <RefreshCw 
-                            size={12} 
-                            className={`${checkingDomains[website._id] ? 'animate-spin' : ''}`}
-                          />
-                        </button>
-                      </div>
-                      
-                      {/* Invalid Configuration Warning */}
-                      {domainStatuses[website._id] && domainStatuses[website._id].status !== 'configured' && (
-                        <div className="p-2 bg-red-50 border border-red-200 rounded">
-                          <p className="text-xs text-red-800 font-medium">⚠️ Invalid Configuration</p>
-                          <p className="text-xs text-red-700 mt-1">
-                            {domainStatuses[website._id].message}
-                          </p>
-                          
-                          {/* Show current nameservers if available */}
-                          {domainStatuses[website._id].currentNameservers && (
-                            <div className="mt-2">
-                              <p className="text-xs text-red-800 font-medium">Current Nameservers:</p>
-                              {domainStatuses[website._id].currentNameservers.map((ns, index) => (
-                                <p key={index} className="text-xs text-red-700 font-mono">
-                                  {ns}
-                                </p>
-                              ))}
-                            </div>
-                          )}
-                          
-                          {/* Show required nameservers */}
-                          {domainStatuses[website._id].requiredNameservers && (
-                            <div className="mt-2">
-                              <p className="text-xs text-red-800 font-medium">Required Nameservers:</p>
-                              {domainStatuses[website._id].requiredNameservers.map((ns, index) => (
-                                <p key={index} className="text-xs text-red-700 font-mono">
-                                  {ns}
-                                </p>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* Success Configuration Info */}
-                      {domainStatuses[website._id] && domainStatuses[website._id].status === 'configured' && (
-                        <div className="p-2 bg-green-50 border border-green-200 rounded">
-                          <p className="text-xs text-green-800 font-medium">✅ DNS Configured Correctly</p>
-                          <p className="text-xs text-green-700 mt-1">
-                            {domainStatuses[website._id].message}
-                          </p>
-                          
-                          {/* Show configured nameservers */}
-                          {domainStatuses[website._id].nameservers && (
-                            <div className="mt-2">
-                              <p className="text-xs text-green-800 font-medium">Configured Nameservers:</p>
-                              {domainStatuses[website._id].nameservers.map((ns, index) => (
-                                <p key={index} className="text-xs text-green-700 font-mono">
-                                  {ns}
-                                </p>
-                              ))}
-                            </div>
-                          )}
-                          
-                          {/* Domain Accessibility Warning */}
-                          {domainStatuses[website._id].accessible === false && (
-                            <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
-                              <p className="text-xs text-yellow-800 font-medium">⚠️ Domain Not Accessible</p>
-                              <p className="text-xs text-yellow-700 mt-1">
-                                Domain is configured but not accessible. Click the button below to add it to Vercel automatically.
-                              </p>
-                              <button
-                                onClick={() => addCustomDomainToVercel(website.customDomain, website._id)}
-                                disabled={checkingDomains[website._id]}
-                                className="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50"
-                              >
-                                {checkingDomains[website._id] ? 'Adding...' : 'Add to Vercel Automatically'}
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {/* Domain Configuration Instructions */}
-                      {website.customDomain && (
-                        <div className="p-2 bg-blue-50 border border-blue-200 rounded mt-2">
-                          <p className="text-xs text-blue-800 font-medium">📋 Domain Configuration Instructions:</p>
-                          <div className="text-xs text-blue-700 mt-1 space-y-1">
-                            <p>1. Go to your domain provider (GoDaddy, Namecheap, etc.)</p>
-                            <p>2. Find DNS/Nameserver settings</p>
-                            <p>3. Replace current nameservers with:</p>
-                            <div className="bg-white p-1 rounded font-mono text-xs">
-                              ns1.vercel-dns.com<br/>
-                              ns2.vercel-dns.com<br/>
-                              ns3.vercel-dns.com<br/>
-                              ns4.vercel-dns.com
-                            </div>
-                            <p>4. Save changes and wait 24-48 hours for propagation</p>
-                          </div>
-                        </div>
-                      )}
                     </div>
-                  )}
-                  {website.isPublished && (
-                    <div className="p-2 bg-green-50 border border-green-200 rounded">
-                      <p className="text-xs text-green-800 font-medium">Live URLs:</p>
-                      <div className="space-y-1">
-                        <a 
-                          href={`https://${website.slug}.jirocash.com`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-green-700 hover:text-green-800 underline block"
-                        >
-                          https://{website.slug}.jirocash.com
-                        </a>
-                        {website.customDomain && (
-                          <a 
+                    {website.customDomain && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          {domainStatuses[website._id] && domainStatuses[website._id].status === 'configured' ? (
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                          ) : domainStatuses[website._id] ? (
+                            <AlertTriangle className="h-4 w-4 text-red-600" />
+                          ) : (
+                            <div className="h-4 w-4" /> // Empty space when no status checked yet
+                          )}
+                  <p className="text-sm text-gray-600">
+                            <strong>Custom Domain:</strong> <a 
                             href={`https://${website.customDomain}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm text-purple-700 hover:text-purple-800 underline block"
+                            className="text-sm text-green-700 hover:text-green-800 underline "
                           >
-                            https://{website.customDomain} (Custom)
+                            {website.customDomain}
                           </a>
+                          </p>
+                        </div>
+                        
+                        {/* Domain Status */}
+                        <div className="flex items-center space-x-2">
+                          {checkingDomains[website._id] ? (
+                            <div className="flex items-center space-x-2">
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                              <span className="text-xs text-gray-600">Checking DNS...</span>
+                            </div>
+                          ) : domainStatuses[website._id] ? (
+                            <div className={`px-2 py-1 text-xs rounded-full ${
+                              getStatusInfo(domainStatuses[website._id].status).color === 'green' 
+                                ? 'bg-green-100 text-green-800'
+                                : getStatusInfo(domainStatuses[website._id].status).color === 'red'
+                                ? 'bg-red-100 text-red-800'
+                                : getStatusInfo(domainStatuses[website._id].status).color === 'orange'
+                                ? 'bg-orange-100 text-orange-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                            {getStatusInfo(domainStatuses[website._id].status).message}
+                          </div>
+                          ) : (
+                            <div className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+                              Status not checked
+                            </div>
+                          )}
+                          
+                          <button
+                            onClick={() => checkCustomDomainStatus(website.customDomain, website._id)}
+                            disabled={checkingDomains[website._id]}
+                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                            title="Check domain status"
+                          >
+                            <RefreshCw 
+                              size={12} 
+                              className={`${checkingDomains[website._id] ? 'animate-spin' : ''}`}
+                            />
+                          </button>
+                        </div>
+                        
+                        
+                        {/* Success Configuration Info */}
+                        {domainStatuses[website._id] && domainStatuses[website._id].status === 'configured' && (
+                          <div className="p-2 bg-green-50 border border-green-200 rounded">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              <p className="text-xs text-green-800 font-medium">DNS Configured Correctly</p>
+                            </div>
+                            <p className="text-xs text-green-700 mt-1">
+                              {domainStatuses[website._id].message}
+                            </p>
+                            
+                            {/* Domain Accessibility Warning */}
+                            {domainStatuses[website._id].accessible === false && (
+                              <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                                <div className="flex items-center gap-2">
+                                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                                  <p className="text-xs text-yellow-800 font-medium">Domain Not Accessible</p>
+                                </div>
+                                <p className="text-xs text-yellow-700 mt-1">
+                                  Domain is configured but not accessible. Click the button below to add it to Vercel automatically.
+                                </p>
+                                <button
+                                  onClick={() => addCustomDomainToVercel(website.customDomain, website._id)}
+                                  disabled={checkingDomains[website._id]}
+                                  className="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                  {checkingDomains[website._id] ? 'Adding...' : 'Add to Vercel Automatically'}
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         )}
-                        <a 
-                          href={`/site/${website.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-700 hover:text-blue-800 underline block"
-                        >
-                          /site/{website.slug} (Alternative)
-                        </a>
+                        
+                        {/* Domain Configuration Instructions - Show when there's a custom domain warning */}
+                        {website.customDomain && (!domainStatuses[website._id] || domainStatuses[website._id].status !== 'configured') && (
+                          <div className="p-2 bg-blue-50 border border-blue-200 rounded mt-2">
+                            <div className="flex items-center gap-2">
+                              <Info className="h-4 w-4 text-blue-600" />
+                              <p className="text-xs text-blue-800 font-medium">Domain Configuration Instructions:</p>
+                            </div>
+                            <div className="text-xs text-blue-700 mt-1 space-y-1">
+                              <p>1. Go to your domain provider (GoDaddy, Namecheap, etc.)</p>
+                              <p>2. Find DNS/Nameserver settings</p>
+                              <p>3. Replace current nameservers with:</p>
+                              <div className="bg-white p-1 rounded font-mono text-xs">
+                                ns1.vercel-dns.com<br/>
+                                ns2.vercel-dns.com<br/>
+                                ns3.vercel-dns.com<br/>
+                                ns4.vercel-dns.com
+                              </div>
+                              <p>4. Save changes and wait 24-48 hours for propagation</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                </div>
+
+                {/* Bottom Section - Dates and Buttons */}
+                <div className="mt-auto px-6 pb-6">
+                  <div className="pt-4 border-t border-gray-100">
                   <p className="text-sm text-gray-600">
                     <strong>Created:</strong> {new Date(website.createdAt).toLocaleDateString()}
                   </p>
@@ -444,6 +445,8 @@ export default function DashboardPage() {
                   )}
                 </div>
 
+                  {/* Action Buttons */}
+                  <div className="pt-4">
                 <div className="flex space-x-2">
                   <button
                     onClick={() => handleEditWebsite(website._id)}
@@ -481,12 +484,14 @@ export default function DashboardPage() {
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

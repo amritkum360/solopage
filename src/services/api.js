@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = 'https://solopage-backend.onrender.com/api';
 
 class ApiService {
   constructor() {
@@ -308,6 +308,28 @@ class ApiService {
   async getWebsiteBySlug(slug) {
     try {
       const response = await fetch(`${this.baseURL}/websites/slug/${slug}`);
+      return this.handleResponse(response);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Check if custom domain is already used by another published website
+  async checkCustomDomainUsage(domain, excludeWebsiteId = null) {
+    try {
+      const response = await fetch(`${this.baseURL}/check-domain-usage/${domain}${excludeWebsiteId ? `?exclude=${excludeWebsiteId}` : ''}`, {
+        headers: this.getAuthHeaders()
+      });
+      return this.handleResponse(response);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Debug: Check Vercel configuration
+  async debugVercelConfig() {
+    try {
+      const response = await fetch(`${this.baseURL}/debug/vercel-config`);
       return this.handleResponse(response);
     } catch (error) {
       throw error;

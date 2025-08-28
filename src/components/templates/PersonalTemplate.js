@@ -157,7 +157,13 @@ export default function PersonalTemplate({ data }) {
             <div className="flex items-center space-x-2 md:space-x-4">
               <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
                 {data.profileImage ? (
-                  <Image src={data.profileImage} alt={data.name} className="w-full h-full object-cover rounded-full" />
+                  <Image 
+                    src={data.profileImage} 
+                    alt={data.name} 
+                    width={64}
+                    height={64}
+                    className="w-full h-full object-cover rounded-full" 
+                  />
                 ) : (
                   <User className="h-8 w-8 text-white" />
                 )}
@@ -239,6 +245,8 @@ export default function PersonalTemplate({ data }) {
                   <Image 
                     src={product.image} 
                     alt={product.name}
+                    width={320}
+                    height={288}
                     className="w-full h-full object-contain p-4 hover:scale-105 transition-transform duration-500"
                   />
                 </div>

@@ -7,7 +7,16 @@ const { body, validationResult } = require('express-validator');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-require('dotenv').config();
+const fetch = require('node-fetch');
+require('dotenv').config({ path: path.join(__dirname, 'config.env') });
+
+// Debug: Log environment variables (only in development)
+if (process.env.NODE_ENV === 'development') {
+  console.log('Environment Variables Debug:');
+  console.log('VERCEL_TOKEN:', process.env.VERCEL_TOKEN ? 'Present' : 'Missing');
+  console.log('VERCEL_PROJECT_ID:', process.env.VERCEL_PROJECT_ID ? 'Present' : 'Missing');
+  console.log('VERCEL_TEAM_ID:', process.env.VERCEL_TEAM_ID ? 'Present' : 'Missing');
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -301,7 +310,7 @@ app.post('/api/websites', authenticateToken, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, slug, template, data, customDomain } = req.body;
+    const { title, slug, template, data, customDomain, isPublished } = req.body;
 
     // Check if slug already exists
     const existingWebsite = await Website.findOne({ slug });
@@ -309,11 +318,14 @@ app.post('/api/websites', authenticateToken, [
       return res.status(400).json({ message: 'Slug already exists' });
     }
 
-    // Check if custom domain already exists (if provided)
-    if (customDomain) {
-      const existingCustomDomain = await Website.findOne({ customDomain });
+    // Check if custom domain already exists (if provided and trying to publish)
+    if (customDomain && isPublished) {
+      const existingCustomDomain = await Website.findOne({ customDomain, isPublished: true });
       if (existingCustomDomain) {
-        return res.status(400).json({ message: 'Custom domain already exists' });
+        return res.status(400).json({ 
+          message: 'Custom domain already exists',
+          details: `This custom domain is already being used by another published website: "${existingCustomDomain.title}". Please unpublish the other website first or choose a different domain.`
+        });
       }
     }
 
@@ -323,7 +335,8 @@ app.post('/api/websites', authenticateToken, [
       slug,
       customDomain,
       template,
-      data
+      data,
+      isPublished: isPublished || false
     });
 
     await website.save();
@@ -393,11 +406,14 @@ app.put('/api/websites/:id', authenticateToken, [
       }
     }
 
-    // Check if custom domain already exists (if being updated)
-    if (customDomain) {
-      const existingCustomDomain = await Website.findOne({ customDomain, _id: { $ne: req.params.id } });
+    // Check if custom domain already exists (if being updated and trying to publish)
+    if (customDomain && isPublished) {
+      const existingCustomDomain = await Website.findOne({ customDomain, _id: { $ne: req.params.id }, isPublished: true });
       if (existingCustomDomain) {
-        return res.status(400).json({ message: 'Custom domain already exists' });
+        return res.status(400).json({ 
+          message: 'Custom domain already exists',
+          details: `This custom domain is already being used by another published website: "${existingCustomDomain.title}". Please unpublish the other website first or choose a different domain.`
+        });
       }
     }
 
@@ -527,13 +543,9 @@ app.get('/api/check-domain-status/:domain', async (req, res) => {
       });
     }
 
-    // Check if domain is published
-    if (!website.isPublished) {
-      return res.json({ 
-        status: 'not_published',
-        message: 'Website is not published'
-      });
-    }
+    // Note: We don't check if the website is published here because we want to show DNS status
+    // regardless of the website's publish status. The frontend will handle showing/hiding
+    // DNS instructions based on the website's publish status.
 
     // Perform real DNS nameserver check
     try {
@@ -593,6 +605,48 @@ app.get('/api/check-domain-status/:domain', async (req, res) => {
 
   } catch (error) {
     console.error('Check domain status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Check if custom domain is already used by another published website
+app.get('/api/check-domain-usage/:domain', async (req, res) => {
+  try {
+    const { domain } = req.params;
+    const { exclude } = req.query; // Website ID to exclude from check (for updates)
+    
+    // Build query to find published websites with this custom domain
+    const query = {
+      customDomain: domain,
+      isPublished: true
+    };
+    
+    // Exclude current website if updating
+    if (exclude) {
+      query._id = { $ne: exclude };
+    }
+    
+    const existingWebsite = await Website.findOne(query);
+    
+    if (existingWebsite) {
+      return res.json({
+        isUsed: true,
+        message: `This custom domain is already being used by another published website: "${existingWebsite.title}"`,
+        existingWebsite: {
+          id: existingWebsite._id,
+          title: existingWebsite.title,
+          slug: existingWebsite.slug
+        }
+      });
+    } else {
+      return res.json({
+        isUsed: false,
+        message: 'Custom domain is available'
+      });
+    }
+    
+  } catch (error) {
+    console.error('Check domain usage error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -729,7 +783,40 @@ app.get('/api/check-vercel-domain/:domain', authenticateToken, async (req, res) 
     });
 
     if (!vercelResponse.ok) {
+      // Domain not found in our project, check if it's assigned to another project
+      try {
+        const allDomainsResponse = await fetch(`https://api.vercel.com/v1/domains`, {
+          headers: {
+            'Authorization': `Bearer ${VERCEL_TOKEN}`,
+            ...(VERCEL_TEAM_ID && { 'x-team-id': VERCEL_TEAM_ID })
+          }
+        });
+
+        if (allDomainsResponse.ok) {
+          const allDomains = await allDomainsResponse.json();
+          const domainInfo = allDomains.domains?.find(d => d.name === domain);
+          
+          if (domainInfo) {
+            // Domain exists but assigned to another project
+            return res.json({
+              success: true,
+              domain: {
+                name: domain,
+                projectId: domainInfo.projectId,
+                assignedToOtherProject: domainInfo.projectId !== VERCEL_PROJECT_ID
+              },
+              status: 'assigned_to_other',
+              message: 'Domain is assigned to another Vercel project'
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error checking all domains:', error);
+      }
+
       return res.json({
+        success: true,
+        domain: null,
         status: 'not_added',
         message: 'Domain not added to Vercel yet'
       });
@@ -742,6 +829,12 @@ app.get('/api/check-vercel-domain/:domain', authenticateToken, async (req, res) 
     await website.save();
 
     res.json({
+      success: true,
+      domain: {
+        name: domain,
+        projectId: VERCEL_PROJECT_ID,
+        assignedToOtherProject: false
+      },
       status: vercelData.verification?.state || 'pending',
       message: vercelData.verification?.state === 'VALID' ? 'Domain is active' : 'Domain verification pending',
       vercelData: vercelData
@@ -771,6 +864,27 @@ app.get('/api/debug/custom-domains', async (req, res) => {
     });
   } catch (error) {
     console.error('Debug custom domains error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Debug: Check Vercel configuration
+app.get('/api/debug/vercel-config', async (req, res) => {
+  try {
+    const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
+    const VERCEL_PROJECT_ID = process.env.VERCEL_PROJECT_ID;
+    const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID;
+    
+    res.json({
+      success: true,
+      vercelToken: VERCEL_TOKEN ? 'Present' : 'Missing',
+      vercelProjectId: VERCEL_PROJECT_ID ? 'Present' : 'Missing',
+      vercelTeamId: VERCEL_TEAM_ID ? 'Present' : 'Missing',
+      allConfigured: !!(VERCEL_TOKEN && VERCEL_PROJECT_ID),
+      message: VERCEL_TOKEN && VERCEL_PROJECT_ID ? 'Vercel configuration is complete' : 'Vercel configuration is incomplete'
+    });
+  } catch (error) {
+    console.error('Debug Vercel config error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

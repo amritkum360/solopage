@@ -8,6 +8,7 @@ export default function PortfolioForm({ data = {}, onInputChange, onToggleVisibi
       {/* Basic Information */}
       <Disclosure defaultOpen>
         {({ open }) => (
+          <div>
           <>
             <Disclosure.Button className="flex w-full justify-between rounded-lg bg-blue-50 px-4 py-3 text-left text-sm font-medium text-blue-900 hover:bg-blue-100 focus:outline-none focus-visible:ring focus-visible:ring-blue-500 focus-visible:ring-opacity-75">
               <span>Basic Information</span>
@@ -88,12 +89,14 @@ export default function PortfolioForm({ data = {}, onInputChange, onToggleVisibi
               </div>
             </Disclosure.Panel>
           </>
+          </div>
         )}
       </Disclosure>
 
       {/* Contact Information */}
       <Disclosure>
         {({ open }) => (
+          <div>
           <>
             <Disclosure.Button className="flex w-full justify-between rounded-lg bg-green-50 px-4 py-3 text-left text-sm font-medium text-green-900 hover:bg-green-100 focus:outline-none focus-visible:ring focus-visible:ring-green-500 focus-visible:ring-opacity-75">
               <span>Contact Information</span>
@@ -174,12 +177,15 @@ export default function PortfolioForm({ data = {}, onInputChange, onToggleVisibi
               </div>
             </Disclosure.Panel>
           </>
+          </div>
         )}
       </Disclosure>
 
       {/* Social Links */}
       <Disclosure>
         {({ open }) => (
+
+          <div>
           <>
             <Disclosure.Button className="flex w-full justify-between rounded-lg bg-purple-50 px-4 py-3 text-left text-sm font-medium text-purple-900 hover:bg-purple-100 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75">
               <span>Social Links</span>
@@ -260,13 +266,14 @@ export default function PortfolioForm({ data = {}, onInputChange, onToggleVisibi
               </div>
             </Disclosure.Panel>
           </>
+          </div>
         )}
       </Disclosure>
 
       {/* Additional Information */}
       <Disclosure>
         {({ open }) => (
-          <>
+          <div><>
             <Disclosure.Button className="flex w-full justify-between rounded-lg bg-orange-50 px-4 py-3 text-left text-sm font-medium text-orange-900 hover:bg-orange-100 focus:outline-none focus-visible:ring focus-visible:ring-orange-500 focus-visible:ring-opacity-75">
               <span>Additional Information</span>
               <ChevronDownIcon
@@ -370,7 +377,8 @@ export default function PortfolioForm({ data = {}, onInputChange, onToggleVisibi
                 </div>
               </div>
             </Disclosure.Panel>
-          </>
+          </></div>
+          
         )}
       </Disclosure>
     </div>

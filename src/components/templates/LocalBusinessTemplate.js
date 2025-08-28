@@ -206,7 +206,13 @@ export default function LocalBusinessTemplate({ data }) {
                 {data.visibility?.profileImage !== false && (
                   <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
                     {data.profileImage ? (
-                      <Image src={`http://localhost:5000${data.profileImage}`} alt={data.name} className="w-full h-full object-cover rounded-full" />
+                      <Image 
+                        src={`http://localhost:5000${data.profileImage}`} 
+                        alt={data.name} 
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover rounded-full" 
+                      />
                     ) : (
                       <User className="h-8 w-8 text-white" />
                     )}
@@ -311,6 +317,8 @@ export default function LocalBusinessTemplate({ data }) {
                     <Image 
                       src={`http://localhost:5000${product.image}`} 
                       alt={product.name}
+                      width={320}
+                      height={288}
                       className="w-full h-full object-contain p-4 hover:scale-105 transition-transform duration-500"
                     />
                   </div>

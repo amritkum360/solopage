@@ -141,7 +141,7 @@ export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVi
       {/* Hero Section */}
       <Disclosure>
         {({ open }) => (
-          <>
+         <div> <>
             <Disclosure.Button className="flex w-full justify-between rounded-lg bg-purple-50 px-4 py-3 text-left text-sm font-medium text-purple-900 hover:bg-purple-100 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75">
               <span>Hero Section</span>
               <ChevronDownIcon
@@ -261,13 +261,14 @@ export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVi
                 </div>
               </div>
             </Disclosure.Panel>
-          </>
+          </></div>
         )}
       </Disclosure>
   
       {/* Contact Information */}
       <Disclosure>
         {({ open }) => (
+          <div>
           <>
             <Disclosure.Button className="flex w-full justify-between rounded-lg bg-green-50 px-4 py-3 text-left text-sm font-medium text-green-900 hover:bg-green-100 focus:outline-none focus-visible:ring focus-visible:ring-green-500 focus-visible:ring-opacity-75">
               <span>Contact Information</span>
@@ -349,6 +350,7 @@ export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVi
               </div>
             </Disclosure.Panel>
           </>
+          </div>
         )}
       </Disclosure>
  
@@ -356,6 +358,7 @@ export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVi
      {/* Experience & Certification */}
 <Disclosure>
   {({ open }) => (
+    <div>
     <>
       <Disclosure.Button className="flex w-full justify-between rounded-lg bg-yellow-50 px-4 py-3 text-left text-sm font-medium text-yellow-900 hover:bg-yellow-100 focus:outline-none focus-visible:ring focus-visible:ring-yellow-500 focus-visible:ring-opacity-75">
         <span>Experience & Certification</span>
@@ -415,14 +418,14 @@ export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVi
           </div>
         </div>
       </Disclosure.Panel>
-    </>
+    </></div>
   )}
 </Disclosure>
 
 {/* Products/Services */}
 <Disclosure>
   {({ open }) => (
-    <>
+   <div> <>
       <Disclosure.Button className="flex w-full justify-between rounded-lg bg-red-50 px-4 py-3 text-left text-sm font-medium text-red-900 hover:bg-red-100 focus:outline-none focus-visible:ring focus-visible:ring-red-500 focus-visible:ring-opacity-75">
         <span>Products/Services</span>
         <ChevronDownIcon
@@ -525,14 +528,14 @@ export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVi
           </button>
         </div>
       </Disclosure.Panel>
-    </>
+    </></div>
   )}
 </Disclosure>
 
 {/* About Section */}
 <Disclosure>
   {({ open }) => (
-    <>
+    <div><>
       <Disclosure.Button className="flex w-full justify-between rounded-lg bg-indigo-50 px-4 py-3 text-left text-sm font-medium text-indigo-900 hover:bg-indigo-100 focus:outline-none focus-visible:ring focus-visible:ring-indigo-500 focus-visible:ring-opacity-75">
         <span>About Section</span>
         <ChevronDownIcon
@@ -615,6 +618,7 @@ export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVi
         </div>
       </Disclosure.Panel>
     </>
+    </div>
   )}
 </Disclosure>
 
@@ -623,7 +627,7 @@ export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVi
 {/* Services */}
 <Disclosure>
   {({ open }) => (
-    <>
+    <div><>
       <Disclosure.Button className="flex w-full justify-between rounded-lg bg-purple-50 px-4 py-3 text-left text-sm font-medium text-purple-900 hover:bg-purple-100 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75">
         <span>Services Offered</span>
         <ChevronDownIcon
@@ -684,13 +688,14 @@ export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVi
         </div>
       </Disclosure.Panel>
     </>
+    </div>
   )}
 </Disclosure>
 
 {/* Contact Section */}
 <Disclosure>
   {({ open }) => (
-    <>
+    <div><>
       <Disclosure.Button className="flex w-full justify-between rounded-lg bg-teal-50 px-4 py-3 text-left text-sm font-medium text-teal-900 hover:bg-teal-100 focus:outline-none focus-visible:ring focus-visible:ring-teal-500 focus-visible:ring-opacity-75">
         <span>Contact Section</span>
         <ChevronDownIcon
@@ -773,14 +778,14 @@ export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVi
           </div>
         </div>
       </Disclosure.Panel>
-    </>
+    </></div>
   )}
 </Disclosure>
 
 {/* Social Media Section */}
 <Disclosure>
   {({ open }) => (
-    <>
+   <div> <>
       <Disclosure.Button className="flex w-full justify-between rounded-lg bg-pink-50 px-4 py-3 text-left text-sm font-medium text-pink-900 hover:bg-pink-100 focus:outline-none focus-visible:ring focus-visible:ring-pink-500 focus-visible:ring-opacity-75">
         <span>Social Media Section</span>
         <ChevronDownIcon
@@ -1023,14 +1028,14 @@ export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVi
           </div>
         </div>
       </Disclosure.Panel>
-    </>
+    </></div>
   )}
 </Disclosure>
 
 {/* Social Links */}
 <Disclosure>
   {({ open }) => (
-    <>
+  <div>  <>
       <Disclosure.Button className="flex w-full justify-between rounded-lg bg-orange-50 px-4 py-3 text-left text-sm font-medium text-orange-900 hover:bg-orange-100 focus:outline-none focus-visible:ring focus-visible:ring-orange-500 focus-visible:ring-opacity-75">
         <span>Social Media Links</span>
         <ChevronDownIcon
@@ -1112,7 +1117,7 @@ export default function LocalBusinessForm({ data = {}, onInputChange, onToggleVi
           </div>
         </div>
       </Disclosure.Panel>
-    </>
+    </></div>
   )}
 </Disclosure>
     </div>

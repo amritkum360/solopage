@@ -24,3 +24,164 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Fix input field text visibility */
+input, textarea, select {
+  color: #374151 !important; /* Dark grey text */
+}
+
+input::placeholder, textarea::placeholder {
+  color: #9ca3af !important; /* Medium grey placeholder */
+}
+
+/* Ensure input text is visible in all states */
+input:focus, textarea:focus, select:focus {
+  color: #111827 !important; /* Dark text when focused */
+}
+
+/* Override any light text colors that might be applied */
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="url"],
+input[type="tel"],
+input[type="number"] {
+  color: #374151 !important;
+}
+
+/* Override Tailwind classes that might make text light */
+.text-gray-400 {
+  color: #6b7280 !important; /* Darker grey */
+}
+
+.text-gray-500 {
+  color: #6b7280 !important; /* Darker grey */
+}
+
+.text-gray-600 {
+  color: #4b5563 !important; /* Even darker grey */
+}
+
+/* Ensure input text is always dark and visible */
+.appearance-none.block.w-full {
+  color: #374151 !important;
+}
+
+/* Override any placeholder colors */
+.placeholder-gray-400::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Make sure all input text is visible */
+input[value] {
+  color: #374151 !important;
+}
+
+/* Fix modal and preview text visibility */
+.modal-header, .preview-header {
+  color: #374151 !important;
+}
+
+/* Fix modal headers and titles */
+.modal h3, .modal h2, .modal h1 {
+  color: #111827 !important; /* Very dark grey */
+}
+
+/* Fix full screen preview modal specifically */
+.fixed.inset-0 h3 {
+  color: #111827 !important;
+}
+
+/* Fix any text in modal headers */
+.flex.items-center.justify-between h3 {
+  color: #111827 !important;
+}
+
+/* Fix browser preview text */
+.text-xs.text-gray-600 {
+  color: #4b5563 !important; /* Darker grey */
+}
+
+/* Fix any light text in modals */
+.modal .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.modal .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+/* Fix heading text visibility - but not in buttons */
+h1:not(button h1), h2:not(button h2), h3:not(button h3), h4:not(button h4), h5:not(button h5), h6:not(button h6) {
+  color: #111827 !important; /* Very dark grey */
+}
+
+/* Fix paragraph and general text - but exclude buttons and special elements */
+p:not(button p):not(.btn p):not(.bg-blue-600 p):not(.bg-green-600 p):not(.bg-red-600 p):not(.bg-yellow-600 p), 
+span:not(button span):not(.btn span):not(.bg-blue-600 span):not(.bg-green-600 span):not(.bg-red-600 span):not(.bg-yellow-600 span), 
+div:not(button div):not(.btn div):not(.bg-blue-600 div):not(.bg-green-600 div):not(.bg-red-600 div):not(.bg-yellow-600 div) {
+  color: #374151 !important; /* Dark grey for better readability */
+}
+
+/* Fix contact card text */
+.contact-card, .info-card {
+  color: #374151 !important;
+}
+
+/* Fix any text in cards or contact information - but not buttons */
+.card p:not(button p), .card span:not(button span), .contact-info {
+  color: #374151 !important;
+}
+
+/* Fix email, phone, location text specifically */
+.contact-info .text-gray-400,
+.contact-info .text-gray-500,
+.contact-info .text-gray-600 {
+  color: #4b5563 !important; /* Darker grey for better readability */
+}
+
+/* Fix any light text in portfolio sections */
+.portfolio-section .text-gray-400,
+.portfolio-section .text-gray-500 {
+  color: #4b5563 !important;
+}
+
+/* Fix any light text in cards or containers - but not buttons */
+.card:not(button):not(.btn), .container:not(button):not(.btn), .section:not(button):not(.btn) {
+  color: #374151 !important;
+}
+
+/* IMPORTANT: Preserve white text on colored buttons and backgrounds */
+button, .btn, .bg-blue-600, .bg-green-600, .bg-red-600, .bg-yellow-600, .bg-purple-600, .bg-indigo-600 {
+  color: inherit !important;
+}
+
+/* Ensure white text on blue buttons stays white */
+.bg-blue-600, .bg-blue-500, .bg-blue-700 {
+  color: white !important;
+}
+
+/* Ensure white text on green buttons stays white */
+.bg-green-600, .bg-green-500, .bg-green-700 {
+  color: white !important;
+}
+
+/* Ensure white text on red buttons stays white */
+.bg-red-600, .bg-red-500, .bg-red-700 {
+  color: white !important;
+}
+
+/* Ensure white text on yellow buttons stays white */
+.bg-yellow-600, .bg-yellow-500, .bg-yellow-700 {
+  color: white !important;
+}
+
+/* Preserve text colors in modals and previews for buttons */
+.modal button, .preview button, .fixed button {
+  color: inherit !important;
+}
+
+/* Fix any text that might be too light - but not on buttons */
+.text-light:not(button .text-light), .text-muted:not(button .text-muted) {
+  color: #6b7280 !important; /* Medium grey instead of very light */
+}
