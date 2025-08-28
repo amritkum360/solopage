@@ -37,6 +37,16 @@ export default function CustomDomainPage() {
           
           if (websiteResponse.success && websiteResponse.website) {
             setSiteData(websiteResponse.website);
+            
+            // Clean up URL (remove /custom/hyfreefire.com)
+            if (typeof window !== 'undefined') {
+              const currentPath = window.location.pathname;
+              if (currentPath.startsWith('/custom/')) {
+                const newUrl = `https://${window.location.host}`;
+                window.history.replaceState({}, '', newUrl);
+                console.log('🧹 Cleaned up URL from:', currentPath, 'to:', newUrl);
+              }
+            }
             return;
           }
         }
