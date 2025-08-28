@@ -482,7 +482,7 @@ export default function DomainsPage() {
                             )}
                           </button>
                           <p className="text-xs text-gray-500 mt-1 text-center">
-                            This will add your domain to Vercel's DNS system
+                            This will add your domain to Vercels DNS system
                           </p>
                         </div>
                       ) : (
