@@ -19,13 +19,15 @@ export default function CustomDomainPage() {
       try {
         setLoading(true);
         
-        // Get the current hostname
+        // Get the current hostname and clean it
         const hostname = window.location.hostname;
+        const cleanHostname = hostname.replace('www.', '');
         console.log('🌐 Current hostname:', hostname);
+        console.log('🌐 Clean hostname:', cleanHostname);
         console.log('🌐 Params domain:', params.domain);
         
         // Try to get site by domain
-        const siteResponse = await apiService.getSiteByDomain(hostname);
+        const siteResponse = await apiService.getSiteByDomain(cleanHostname);
         console.log('🌐 Site response:', siteResponse);
         
         if (siteResponse.success && siteResponse.siteSlug) {
