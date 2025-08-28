@@ -5,11 +5,11 @@ const nextConfig = {
       // Custom domain rewrites
       {
         source: '/',
-        destination: '/custom-domain/:host',
+        destination: '/custom/hyfreefire.com',
         has: [
           {
             type: 'host',
-            value: '(?!.*jirocash\.com)(?!.*localhost)(?!.*127\.0\.0\.1)(?!.*vercel\.app)(?!.*netlify\.app).*',
+            value: 'hyfreefire.com',
           },
         ],
       },
