@@ -1,52 +1,50 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { 
-  PortfolioTemplate, 
-  BusinessTemplate, 
-  PersonalTemplate,
-  LocalBusinessTemplate
-} from '@/components/templates';
 import apiService from '@/services/api';
+import BusinessTemplate from '@/components/templates/BusinessTemplate';
+import PersonalTemplate from '@/components/templates/PersonalTemplate';
+import PortfolioTemplate from '@/components/templates/PortfolioTemplate';
+import LocalBusinessTemplate from '@/components/templates/LocalBusinessTemplate';
 
 export default function CustomDomainPage() {
   const params = useParams();
-  const { domain } = params;
   const [siteData, setSiteData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchCustomDomainData = async () => {
       try {
-        console.log('Fetching custom domain website for:', domain);
-        const response = await apiService.getWebsiteByCustomDomain(domain);
-        console.log('Custom domain website data received:', response);
-        setSiteData(response.website);
-      } catch (error) {
-        console.error('Error fetching custom domain website:', error);
-        if (error.message.includes('not found')) {
-          setError('Website not found or not published');
-        } else if (error.message.includes('network')) {
-          setError('Network error: Please check if the backend server is running');
+        setLoading(true);
+        const domain = params.domain;
+        
+        console.log('🌐 Fetching custom domain data for:', domain);
+        
+        const data = await apiService.getWebsiteByCustomDomain(domain);
+        
+        if (data.success && data.website) {
+          setSiteData(data.website);
         } else {
-          setError('Website not found or not published');
+          setError('Website not found for this domain');
         }
+      } catch (err) {
+        console.error('Custom domain fetch error:', err);
+        setError('Failed to load website');
       } finally {
         setLoading(false);
       }
     };
 
-    if (domain) {
+    if (params.domain) {
       fetchCustomDomainData();
     }
-  }, [domain]);
+  }, [params.domain]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading website...</p>
@@ -55,46 +53,57 @@ export default function CustomDomainPage() {
     );
   }
 
-  if (error || !siteData) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Website Not Found</h1>
-          <p className="text-gray-600 mb-4">{error || 'This website does not exist or is not published.'}</p>
-          
-          {/* Debug Information */}
-          <div className="bg-gray-50 p-4 rounded-lg mb-4 text-left">
-            <p className="text-sm text-gray-600 mb-2">
-              <strong>Debug Info:</strong>
-            </p>
-            <p className="text-xs text-gray-500 mb-1">
-              Custom Domain: {domain}
-            </p>
-            <p className="text-xs text-gray-500 mb-1">
-              URL: {typeof window !== 'undefined' ? window.location.href : 'Unknown'}
-            </p>
-            <p className="text-xs text-gray-500">
-              Host: {typeof window !== 'undefined' ? window.location.host : 'Unknown'}
-            </p>
-          </div>
-
-          <Link 
-            href="/" 
-            className="text-blue-600 hover:text-blue-700 font-medium"
-          >
-            Go back home
-          </Link>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Website Not Found</h1>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <p className="text-sm text-gray-500">
+            Custom Domain: {params.domain}
+          </p>
         </div>
       </div>
     );
   }
 
+  if (!siteData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Website Not Found</h1>
+          <p className="text-gray-600">
+            No website found for domain: {params.domain}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Render the appropriate template based on siteData.template
+  const renderTemplate = () => {
+    switch (siteData.template) {
+      case 'business':
+        return <BusinessTemplate data={siteData} />;
+      case 'personal':
+        return <PersonalTemplate data={siteData} />;
+      case 'portfolio':
+        return <PortfolioTemplate data={siteData} />;
+      case 'local-business':
+        return <LocalBusinessTemplate data={siteData} />;
+      default:
+        return <PersonalTemplate data={siteData} />;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white">
-      {siteData.template === 'portfolio' && <PortfolioTemplate data={siteData.data} />}
-      {siteData.template === 'business' && <BusinessTemplate data={siteData.data} />}
-      {siteData.template === 'personal' && <PersonalTemplate data={siteData.data} />}
-      {siteData.template === 'localbusiness' && <LocalBusinessTemplate data={siteData.data} />}
+    <div>
+      {/* Debug info - remove in production */}
+      <div className="fixed top-0 left-0 bg-black text-white p-2 text-xs z-50">
+        Custom Domain: {params.domain} | Template: {siteData.template}
+      </div>
+      
+      {renderTemplate()}
     </div>
   );
 }
