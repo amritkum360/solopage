@@ -23,8 +23,12 @@ export default function HomePage() {
             // Import apiService dynamically
             const apiService = (await import('@/services/api')).default;
             
+            // Remove www if present
+            const cleanHost = host.replace('www.', '');
+            console.log('🌐 Clean hostname:', cleanHost);
+            
             // Try to get site by domain
-            const siteResponse = await apiService.getSiteByDomain(host);
+            const siteResponse = await apiService.getSiteByDomain(cleanHost);
             console.log('🌐 Site response:', siteResponse);
             
             if (siteResponse.success && siteResponse.siteSlug) {
@@ -34,7 +38,7 @@ export default function HomePage() {
               
               if (websiteResponse.success && websiteResponse.website) {
                 // Redirect to custom domain page
-                router.push(`/custom/${host}`);
+                router.push(`/custom/${cleanHost}`);
                 return;
               }
             }
