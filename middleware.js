@@ -8,7 +8,10 @@ export async function middleware(req) {
   console.log('🔍 Middleware Debug:', {
     host: host,
     pathname: req.nextUrl.pathname,
-    fullUrl: req.nextUrl.href
+    fullUrl: req.nextUrl.href,
+    isJirocash: host.includes("jirocash.com"),
+    isLocalhost: host.includes("localhost"),
+    isVercel: host.includes("vercel.app")
   });
 
   // Extract subdomain from host
@@ -53,8 +56,8 @@ export async function middleware(req) {
   ) {
     // This might be a custom domain
     if (req.nextUrl.pathname === "/" || req.nextUrl.pathname === "") {
-      // Route to custom domain handler
-      const newPathname = `/custom-domain/${host}`;
+      // Route to custom domain handler (temporarily test page)
+      const newPathname = `/test-middleware`;
       url.pathname = newPathname;
       
       console.log('🌐 Custom domain detected:', {
